@@ -8,7 +8,6 @@ MCT_Simulator::MCT_Simulator(QWidget *parent) :
 {
     ui->setupUi(this);
     initUI();
-    downUpper = 4;
     time.setHMS(0, 4, 0);
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateCountDown()));
     connect(ui->downButton, SIGNAL(released()), this, SLOT(directionButtonPressed()));
@@ -36,28 +35,30 @@ void MCT_Simulator::menuButtonPressed()
 
 void MCT_Simulator::directionButtonPressed()
 {
-    QPushButton *button = (QPushButton*) sender();
-    QListWidget *menu = ui->listWidget;
-    if(button->objectName() == "downButton" && ui->listWidget->currentRow() != downUpper && ui->listWidget->currentRow() != -1)
-    {
-        int rowNum = ui->listWidget->currentRow();
-        ui->listWidget->setCurrentRow(rowNum+1);  
-    }
+    if (isOn){
+        QPushButton *button = (QPushButton*) sender();
+        QListWidget *menu = ui->listWidget;
+        if(button->objectName() == "downButton" && ui->listWidget->currentRow() != downUpper && ui->listWidget->currentRow() != -1)
+        {
+            int rowNum = ui->listWidget->currentRow();
+            ui->listWidget->setCurrentRow(rowNum+1);
+        }
 
-    else if (button->objectName() == "upButton" && ui->listWidget->currentRow() != upUpper && ui->listWidget->currentRow() != 1)
-    {
-        int rowNum = ui->listWidget->currentRow();
-        ui->listWidget->setCurrentRow(rowNum-1);
-    }
-    else if (button->objectName() == "leftButton" && powerLevel != 0 && (state == "Frequency Treatment" || state == "Programs Treatment"))
-    {
-        powerLevel--;
-        menu->item(5)->setText("Power : " + QString::number(powerLevel));
-    }
-    else if (button->objectName() == "rightButton" && powerLevel != 100 && (state == "Frequency Treatment" || state == "Programs Treatment"))
-    {
-        powerLevel++;
-        menu->item(5)->setText("Power : " + QString::number(powerLevel));
+        else if (button->objectName() == "upButton" && ui->listWidget->currentRow() != upUpper && ui->listWidget->currentRow() != 1)
+        {
+            int rowNum = ui->listWidget->currentRow();
+            ui->listWidget->setCurrentRow(rowNum-1);
+        }
+        else if (button->objectName() == "leftButton" && powerLevel != 0 && (state == "Frequency Treatment" || state == "Programs Treatment"))
+        {
+            powerLevel--;
+            menu->item(5)->setText("Power : " + QString::number(powerLevel));
+        }
+        else if (button->objectName() == "rightButton" && powerLevel != 100 && (state == "Frequency Treatment" || state == "Programs Treatment"))
+        {
+            powerLevel++;
+            menu->item(5)->setText("Power : " + QString::number(powerLevel));
+        }
     }
 
 }
@@ -66,7 +67,7 @@ void MCT_Simulator::powerButtonPressed()
 {
     QListWidget *menu = ui->listWidget;
 
-    if (menu->item(2)->text() == "POWER OFF" && isOn == false) {
+    if (menu->item(2)->text() == "POWER OFF" && isOn == false && batteryLevel > 0) {
         isOn = true;
         changetoMainMenu();
     }else{
@@ -77,14 +78,21 @@ void MCT_Simulator::powerButtonPressed()
 
 void MCT_Simulator::returnButtonPressed()
 {
-    QListWidget *menu = ui->listWidget;
-    if (menu->item(0)->text() == "Frequency" || menu->item(0)->text() == "Programs"){
-        changetoMainMenu();
-    }else if (menu->item(0)->text() == "Rcord this treatment?")
+    if (isOn){
+        QListWidget *menu = ui->listWidget;
+        if (menu->item(0)->text() == "Frequency" || menu->item(0)->text() == "Programs"){
+            changetoMainMenu();
+        }else if (menu->item(0)->text() == "Rcord this treatment?")
         {
-        if (state == "Frequency"){changetoFrequency();}
-        else if (state == "Programs") {changetoPrograms();}
+             if (state == "Frequency"){changetoFrequency();}
+            else if (state == "Programs") {changetoPrograms();}
+        }else if (state == "Frequency Treatment")  {changetoFrequency();
+
+        }else if (state == "Programs Treatment")  {changetoFrequency();
         }
+        timer.stop();
+    }
+
 }
 
 void MCT_Simulator::okButtonPressed()
@@ -102,8 +110,12 @@ void MCT_Simulator::okButtonPressed()
         }else if (temp == "Yes"){
             recordingToggle = true;
             changetoSelectBattery();
+        }else if (temp == "No"){
+            recordingToggle = false;
+            changetoSelectBattery();
         }
         else if (state == "Frequency Treatment" || state == "Programs Treatment"){
+            isTreatment = true;
             changetoTreatment();
         }
     }
@@ -118,9 +130,8 @@ void MCT_Simulator::updateCountDown()
         time = time.addSecs(-1);
     }
 
-
     menu->item(2)->setText(time.toString("m:ss"));
-
+    updateBattery();
 
 }
 //state: Main / Frequency / Programs
@@ -128,10 +139,24 @@ void MCT_Simulator::updateCountDown()
 //recording(state, currentTreatment);
 
 //This function chagnes the list widget to main menu layout
+
+void MCT_Simulator::updateBattery(){
+        batteryLevel -= powerLevel * 1;
+        QLabel *batteryText = ui->batteryText;
+
+        if (batteryLevel  <= 0){
+            batteryLevel = 0;
+            timer.stop();
+            changetoPowerOff();
+        }
+        batteryText->setText(QString::number(batteryLevel) + "%");
+}
 void MCT_Simulator::changetoMainMenu()
 {
     state = "Main";
     setUnhidden();
+    downUpper = 4;
+    upUpper = 1;
     QListWidget *menu = ui->listWidget;
     menu->item(0)->setText("Main Menu");
     menu->item(1)->setText("Programs");
@@ -152,6 +177,7 @@ void MCT_Simulator::changetoFrequency()
     menu->item(2)->setText("20Hz");
     menu->item(3)->setText("125Hz");
     menu->item(4)->setText("7720");
+    menu->item(5)->setText("");
     menu->setCurrentRow(1);
 
     menu->item(3)->setHidden(false);
@@ -181,6 +207,7 @@ void MCT_Simulator::changetoSelectBattery()
      downUpper = 5;
      QListWidget *menu = ui->listWidget;
      state = state + " Treatment";
+     qInfo() << "Current State " + state;
      menu->item(0)->setText(currentTreatment);
      menu->item(1)->setText("");
 
@@ -210,8 +237,9 @@ void MCT_Simulator::changetoTreatment()
 }
 void MCT_Simulator::changetoPowerOff()
 {
+    isOn = false;
     upUpper = 2;
-    downLower = 2;
+    downUpper = 2;
     QListWidget *menu = ui->listWidget;
     menu->item(0)->setText("");
     menu->item(1)->setText("");
@@ -221,7 +249,6 @@ void MCT_Simulator::changetoPowerOff()
     menu->item(5)->setText("");
     menu->setCurrentRow(2);
 
-    //menu->item(5)->setFlags(Qt::ItemIsSelectable);
 }
 
 void  MCT_Simulator::askForRecording()
@@ -253,6 +280,7 @@ void MCT_Simulator::setUnhidden()
 void MCT_Simulator::initUI()
 {
     isOn = false;
+    batteryLevel = 100;
     changetoPowerOff();
     QPixmap pixmap("/home/student/Desktop/GroupProject/MCT_device_simulator/left_icon.png");
     ui->leftButton->setIcon(QIcon(pixmap));

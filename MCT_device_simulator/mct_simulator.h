@@ -26,9 +26,11 @@ public:
     void setUnhidden();
     void changetoTreatment();
     void changetoSelectBattery();
+    void updateBattery();
+
     ~MCT_Simulator();
     //Frequency f;
-    string state;
+    QString state;
     int powerLevel = 0;
     QString currentTreatment;
     QTime time;
@@ -39,6 +41,8 @@ private:
     Ui::MCT_Simulator *ui;
     bool isOn;
     bool recordingToggle;
+    bool isTreatment = false;
+    double batteryLevel;
     int downUpper;
     int downLower;
     int upUpper;
