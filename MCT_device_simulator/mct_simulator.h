@@ -3,10 +3,11 @@
 
 #include <QMainWindow>
 #include <QDebug>
-#include "frequency.h"
 #include <QTimer>
+#include <QDateTime>
 #include <QTime>
-
+#include <QCoreApplication>
+#include "recording.h"
 namespace Ui {
 class MCT_Simulator;
 }
@@ -22,6 +23,8 @@ public:
     void changetoFrequency();
     void changetoPrograms();
     void changetoPowerOff();
+    void changetoHistory();
+    void changetoView();
     void askForRecording();
     void setUnhidden();
     void changetoTreatment();
@@ -29,10 +32,12 @@ public:
     void updateBattery();
 
     ~MCT_Simulator();
-    //Frequency f;
     QString state;
-    int powerLevel = 0;
     QString currentTreatment;
+    QString path = "/home/student/Desktop/GroupProject/MCT_device_simulator/";
+    int powerLevel = 0;
+    int highestLevel;
+    QDateTime date;
     QTime time;
     QTimer timer;
 
@@ -44,9 +49,8 @@ private:
     bool isTreatment = false;
     double batteryLevel;
     int downUpper;
-    int downLower;
     int upUpper;
-    int upLower;
+    std::vector<Recording*> history;
 
 private slots:
     void directionButtonPressed();  //Handles direction buttons

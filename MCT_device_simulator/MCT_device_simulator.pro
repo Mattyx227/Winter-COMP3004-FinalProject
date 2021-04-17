@@ -25,13 +25,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-        frequency.cpp \
         main.cpp \
-        mct_simulator.cpp
+        mct_simulator.cpp \
+        recording.cpp
 
 HEADERS += \
-        frequency.h \
-        mct_simulator.h
+        mct_simulator.h \
+        recording.h
 
 FORMS += \
         mct_simulator.ui

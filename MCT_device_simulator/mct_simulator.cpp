@@ -58,6 +58,10 @@ void MCT_Simulator::directionButtonPressed()
         {
             powerLevel++;
             menu->item(5)->setText("Power : " + QString::number(powerLevel));
+
+            if (highestLevel < powerLevel){
+                highestLevel = powerLevel;
+            }
         }
     }
 
@@ -72,6 +76,7 @@ void MCT_Simulator::powerButtonPressed()
         changetoMainMenu();
     }else{
         isOn = false;
+        timer.stop();
         changetoPowerOff();
     }
 }
@@ -80,16 +85,35 @@ void MCT_Simulator::returnButtonPressed()
 {
     if (isOn){
         QListWidget *menu = ui->listWidget;
-        if (menu->item(0)->text() == "Frequency" || menu->item(0)->text() == "Programs"){
+        if (menu->item(0)->text() == "Frequency" || menu->item(0)->text() == "Programs" || menu->item(0)->text() == "History"){
             changetoMainMenu();
         }else if (menu->item(0)->text() == "Rcord this treatment?")
         {
              if (state == "Frequency"){changetoFrequency();}
             else if (state == "Programs") {changetoPrograms();}
-        }else if (state == "Frequency Treatment")  {changetoFrequency();
+        }else if (state == "Frequency Treatment")
+        {
+            if (recordingToggle == true){
+            history.push_back(new Recording(state, currentTreatment, time, date, powerLevel));
+            }
+            changetoFrequency();
 
-        }else if (state == "Programs Treatment")  {changetoFrequency();
+
+        }else if (state == "Programs Treatment")
+        {
+            if (recordingToggle == true){
+            QTime total;
+            total.setHMS(0, 5, 0);
+            int sec = time.secsTo(total);
+            time.setHMS(0, 0, 0);
+            time = time.addSecs(sec);
+            Recording* r = new Recording(state, currentTreatment, time, date, powerLevel);
+            history.push_back(r);
+            }
+
+            changetoPrograms();
         }
+        else if ( menu->item(0)->text() == "Treatment / Duration / Date / Power"){changetoHistory();}
         timer.stop();
     }
 
@@ -114,9 +138,16 @@ void MCT_Simulator::okButtonPressed()
             recordingToggle = false;
             changetoSelectBattery();
         }
-        else if (state == "Frequency Treatment" || state == "Programs Treatment"){
+        else if ((state == "Frequency Treatment" || state == "Programs Treatment") && powerLevel > 0){
             isTreatment = true;
+            date = date.currentDateTime();
             changetoTreatment();
+        }else if (temp == "History"){
+            changetoHistory();
+        }else if (temp == "View"){
+            changetoView();
+        }else if (temp == "Clear"){
+            history.clear();
         }
     }
 }
@@ -140,8 +171,12 @@ void MCT_Simulator::updateCountDown()
 
 //This function chagnes the list widget to main menu layout
 
+
+
+
+
 void MCT_Simulator::updateBattery(){
-        batteryLevel -= powerLevel * 1;
+        batteryLevel -= powerLevel * 0.1;
         QLabel *batteryText = ui->batteryText;
 
         if (batteryLevel  <= 0){
@@ -151,18 +186,34 @@ void MCT_Simulator::updateBattery(){
         }
         batteryText->setText(QString::number(batteryLevel) + "%");
 }
+
+void MCT_Simulator::changetoView()
+{
+    upUpper = 1;
+    downUpper = 1;
+    QListWidget *menu = ui->listWidget;
+    menu->item(0)->setText("Treatment / Duration / Date / Power");
+    menu->item(1)->setText("");
+    menu->item(2)->setText("");
+    menu->setCurrentRow(1);
+    for (int i = 0; i < int(history.size()); i ++){
+        downUpper = i+1;
+
+        menu->item(i+1)->setText(history.at(i)->formatText());
+    }
+}
 void MCT_Simulator::changetoMainMenu()
 {
     state = "Main";
     setUnhidden();
-    downUpper = 4;
+    downUpper = 3;
     upUpper = 1;
     QListWidget *menu = ui->listWidget;
     menu->item(0)->setText("Main Menu");
     menu->item(1)->setText("Programs");
     menu->item(2)->setText("Frequency");
     menu->item(3)->setText("History");
-    menu->item(4)->setText("Recording Setting");
+    menu->item(4)->setText("");
     menu->item(5)->setText("");
     menu->setCurrentRow(1);
 }
@@ -195,14 +246,28 @@ void MCT_Simulator::changetoPrograms()
     menu->item(2)->setText("Pain");
     menu->item(3)->setText("Bloating");
     menu->item(4)->setText("Dystonia");
+    menu->item(5)->setText("");
     menu->setCurrentRow(1);
 
 
 }
 
+void MCT_Simulator::changetoHistory()
+{
+     upUpper = 1;
+     downUpper = 2;
+     QListWidget *menu = ui->listWidget;
+     menu->item(0)->setText("History");
+     menu->item(1)->setText("View");
+     menu->item(2)->setText("Clear");
+     menu->item(3)->setText("");
+     menu->setCurrentRow(1);
+}
+
 void MCT_Simulator::changetoSelectBattery()
 {
      powerLevel = 0;
+     highestLevel = 0;
      upUpper = 5;
      downUpper = 5;
      QListWidget *menu = ui->listWidget;
@@ -282,35 +347,36 @@ void MCT_Simulator::initUI()
     isOn = false;
     batteryLevel = 100;
     changetoPowerOff();
-    QPixmap pixmap("/home/student/Desktop/GroupProject/MCT_device_simulator/left_icon.png");
+
+    QPixmap pixmap(path + "left_icon.png");
     ui->leftButton->setIcon(QIcon(pixmap));
     ui->leftButton->setIconSize(QSize(30, 30));
 
-    pixmap.load("/home/student/Desktop/GroupProject/MCT_device_simulator/right_icon.png");
+    pixmap.load(path + "right_icon.png");
     ui->rightButton->setIcon(QIcon(pixmap));
     ui->rightButton->setIconSize(QSize(30, 30));
 
-    pixmap.load("/home/student/Desktop/GroupProject/MCT_device_simulator/down_icon.png");
+    pixmap.load(path + "down_icon.png");
     ui->downButton->setIcon(QIcon(pixmap));
     ui->downButton->setIconSize(QSize(30, 30));
 
-    pixmap.load("/home/student/Desktop/GroupProject/MCT_device_simulator/up_icon.png");
+    pixmap.load(path + "up_icon.png");
     ui->upButton->setIcon(QIcon(pixmap));
     ui->upButton->setIconSize(QSize(30, 30));
 
-    pixmap.load("/home/student/Desktop/GroupProject/MCT_device_simulator/ok_icon.png");
+    pixmap.load(path + "ok_icon.png");
     ui->okButton->setIcon(QIcon(pixmap));
     ui->okButton->setIconSize(QSize(30, 30));
 
-    pixmap.load("/home/student/Desktop/GroupProject/MCT_device_simulator/return_icon.png");
+    pixmap.load(path + "return_icon.png");
     ui->returnButton->setIcon(QIcon(pixmap));
     ui->returnButton->setIconSize(QSize(30, 30));
 
-    pixmap.load("/home/student/Desktop/GroupProject/MCT_device_simulator/menu_icon.png");
+    pixmap.load(path + "menu_icon.png");
     ui->menuButton->setIcon(QIcon(pixmap));
     ui->menuButton->setIconSize(QSize(30, 30));
 
-    pixmap.load("/home/student/Desktop/GroupProject/MCT_device_simulator/power_icon.png");
+    pixmap.load(path + "power_icon.png");
     ui->powerButton->setIcon(QIcon(pixmap));
     ui->powerButton->setIconSize(QSize(30, 30));
 

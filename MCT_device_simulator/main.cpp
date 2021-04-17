@@ -1,5 +1,4 @@
 #include "mct_simulator.h"
-#include "frequency.h"
 #include <QApplication>
 
 int main(int argc, char *argv[])
