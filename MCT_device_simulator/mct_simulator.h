@@ -24,6 +24,7 @@ public:
 
 
 private:
+    QString path = "/home/student/Downloads/Winter-COMP3004-FinalProject-main/MCT_device_simulator/"; //change this path to load the image properly!
 
     void changetoMainMenu();                //Redirect the UI to Main Menu, this stops the timer if its on
     void changetoFrequency();               //Redriect the UI to Frequency page, with 4 options.
@@ -39,7 +40,6 @@ private:
 
     QString state;                          // This state allows the buttons to detect which state the simulator is at in order to change to correct UI layout
     QString currentTreatment;               // This is used to store into a recording in order for History viewr
-    QString path = "/home/student/Desktop/GroupProject/MCT_device_simulator/"; //change this path to load the image properly!
     QDateTime date;                         //This saves the date + time for recording
     QTime time;                             //This is the duration of the current treatment
     QTimer timer;
