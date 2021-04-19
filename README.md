@@ -6,3 +6,5 @@ How to run:
 1)Open up QT then go to file->Open File or Project
 2)Then go to the MCT_device_simulator directory and select MCT_device_simulator.pro
 3)Then select run and the program will be running
+
+Note: If the buttons are not showing up, modify the path variable in the MCT_simulator.h file and make sure it's the right path!
